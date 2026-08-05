@@ -1407,7 +1407,19 @@ p{ margin:0; }
       text.setAttribute("text-anchor", anchor);
       text.setAttribute("dominant-baseline", "middle");
       text.setAttribute("class", "radar-label");
-      text.textContent = p.label;
+      // rótulos longos quebram em duas linhas para não estourar o viewBox
+      const words = p.label.split(" ");
+      if (words.length > 1 && p.label.length > 14) {
+        words.forEach((word, wi) => {
+          const tspan = document.createElementNS(svgNS, "tspan");
+          tspan.setAttribute("x", labelPos.x);
+          tspan.setAttribute("dy", wi === 0 ? "-0.35em" : "1.1em");
+          tspan.textContent = word;
+          text.appendChild(tspan);
+        });
+      } else {
+        text.textContent = p.label;
+      }
       radarSvg.appendChild(text);
     });
 
