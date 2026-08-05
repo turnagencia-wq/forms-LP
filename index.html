@@ -521,6 +521,104 @@ p{ margin:0; }
   max-width: 42ch;
 }
 
+/* insight — "o que seu resultado indica" */
+.insight-block{
+  margin-bottom: 44px;
+  padding-bottom: 44px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.insight-block p{
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--gray-700);
+  max-width: 60ch;
+  margin:0;
+}
+
+/* selos de classificação por pilar */
+.tier-badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+.tier-badge--high{ background: rgba(226,87,76,.12); color: #b23327; }
+.tier-badge--mid{  background: rgba(226,168,63,.16); color: #8a5f0f; }
+.tier-badge--good{ background: var(--lime-dim); color: var(--lime-ink); }
+
+/* pontos de atenção / oportunidades de evolução */
+.attention-block{ margin-bottom: 56px; }
+.attention-block__support{
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--gray-700);
+  max-width: 60ch;
+  margin: -6px 0 22px;
+}
+.attention-cards{
+  display:flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.attention-card{
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-left: 4px solid var(--gray-300);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+}
+.attention-card--high{ border-left-color: var(--score-low); }
+.attention-card--mid{  border-left-color: var(--score-mid); }
+.attention-card--good{ border-left-color: var(--score-good); }
+.attention-card__head{
+  display:flex;
+  align-items:center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: 10px;
+}
+.attention-card__name{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16.5px;
+}
+.attention-card__score{
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--gray-600);
+}
+.attention-card__text{
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--gray-700);
+  margin: 0 0 12px;
+}
+.attention-card__watch-label{
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin: 0 0 8px;
+}
+.attention-card__watch-list{
+  margin:0;
+  padding-left: 18px;
+  display:flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.attention-card__watch-list li{
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--gray-700);
+}
+
 /* radar */
 .radar-block{ margin-bottom: 56px; }
 .radar-wrap{
@@ -569,10 +667,17 @@ p{ margin:0; }
 }
 .pillar-result__head{
   display:flex;
-  align-items:baseline;
+  align-items:center;
+  flex-wrap: wrap;
   justify-content: space-between;
   margin-bottom: 10px;
-  gap: 12px;
+  gap: 10px 12px;
+}
+.pillar-result__head-left{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 .pillar-result__name{
   font-family: var(--font-display);
@@ -600,6 +705,9 @@ p{ margin:0; }
   background: var(--black);
   transition: width 1s var(--ease);
 }
+.pillar-result__bar-fill--high{ background: var(--score-low); }
+.pillar-result__bar-fill--mid{  background: var(--score-mid); }
+.pillar-result__bar-fill--good{ background: var(--score-good); }
 .pillar-result__text{
   font-size: 14px;
   line-height: 1.55;
@@ -698,6 +806,31 @@ p{ margin:0; }
   gap: 18px;
   text-align:center;
   padding: 8px 0 12px;
+}
+.cta-block__card{
+  width:100%;
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: 14px;
+  padding: 40px 32px;
+  background: var(--lime);
+  border-radius: var(--radius-lg);
+}
+.cta-block__title{
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(20px, 3vw, 25px);
+  line-height: 1.25;
+  color: var(--black);
+  max-width: 34ch;
+}
+.cta-block__text{
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--lime-ink);
+  max-width: 52ch;
+  margin: -4px 0 6px;
 }
 .cta-block .btn--lg{ width:100%; max-width: 420px; }
 
@@ -875,8 +1008,19 @@ p{ margin:0; }
         </div>
       </div>
 
+      <div class="insight-block">
+        <h3 class="block-title">O que seu resultado indica</h3>
+        <p id="insightText"></p>
+      </div>
+
+      <div class="attention-block">
+        <h3 class="block-title" id="attentionTitle">Principais pontos de atenção</h3>
+        <p class="attention-block__support" id="attentionSupport"></p>
+        <div class="attention-cards" id="attentionCards"><!-- gerado via JS --></div>
+      </div>
+
       <div class="radar-block">
-        <h3 class="block-title">Visão geral por pilar</h3>
+        <h3 class="block-title">Visão dos seis pilares</h3>
         <div class="radar-wrap">
           <svg viewBox="0 0 400 400" class="radar-svg" id="radarSvg" aria-hidden="true"></svg>
         </div>
@@ -888,38 +1032,45 @@ p{ margin:0; }
       </div>
 
       <div class="meaning-block">
-        <h3 class="block-title">O que esse diagnóstico significa?</h3>
+        <h3 class="block-title">O que este diagnóstico significa?</h3>
         <p>
-          Este diagnóstico identifica sintomas. Ele ajuda a visualizar onde estão os
-          principais pontos de atenção da empresa.
+          Este diagnóstico identifica os principais sintomas da estrutura de marketing da
+          sua empresa.
         </p>
         <p>
-          Porém, ele não identifica a causa dos problemas. Para descobrir exatamente o
-          que está limitando o crescimento do seu negócio, é necessário um diagnóstico
-          estratégico mais aprofundado.
+          Ele ajuda a visualizar quais pilares apresentam maior maturidade e quais
+          merecem atenção.
+        </p>
+        <p>
+          Porém, esta análise inicial não revela sozinha as causas dos gargalos nem
+          define como as mudanças devem ser aplicadas.
+        </p>
+        <p>
+          Para compreender o que está limitando o crescimento da empresa e estabelecer
+          uma ordem de prioridades, é necessária uma análise estratégica mais
+          aprofundada.
         </p>
       </div>
 
       <div class="email-block">
-        <h3 class="block-title">Receba uma versão completa do seu diagnóstico</h3>
+        <h3 class="block-title">Receba seu relatório completo</h3>
         <p class="email-block__text">
-          Você acabou de visualizar um resumo do seu resultado. Caso queira receber uma
-          análise mais completa, com recomendações para cada um dos pilares avaliados,
-          informe seu e-mail abaixo.
+          Informe seu e-mail para receber em PDF a análise dos seis pilares, os
+          principais pontos de atenção e as prioridades identificadas para sua empresa.
         </p>
         <form class="email-form" id="emailForm" novalidate>
-          <label class="email-form__label" for="emailInput">Seu e-mail</label>
+          <label class="email-form__label" for="emailInput">Seu melhor e-mail</label>
           <div class="email-form__row">
             <input
               type="email"
               id="emailInput"
               class="email-form__input"
-              placeholder="Seu e-mail"
+              placeholder="Seu melhor e-mail"
               autocomplete="email"
               required
             >
             <button type="submit" class="btn btn--primary email-form__submit" id="emailSubmitBtn">
-              Enviar diagnóstico completo
+              Receber relatório por e-mail
             </button>
           </div>
           <p class="email-form__feedback" id="emailFeedback" aria-live="polite"></p>
@@ -927,10 +1078,18 @@ p{ margin:0; }
       </div>
 
       <div class="cta-block">
-        <a href="#" target="_blank" rel="noopener" class="btn btn--primary btn--lg" id="ctaWhatsapp">
-          Quero um Diagnóstico Estratégico
-          <svg viewBox="0 0 24 24" class="btn-icon"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-        </a>
+        <div class="cta-block__card">
+          <h3 class="cta-block__title">Seu resultado mostrou onde olhar. Agora precisamos entender as causas.</h3>
+          <p class="cta-block__text">
+            O Diagnóstico Estratégico da Turn aprofunda os pontos encontrados, identifica
+            prioridades e ajuda a definir os caminhos mais adequados para a realidade da
+            sua empresa.
+          </p>
+          <a href="#" target="_blank" rel="noopener" class="btn btn--primary btn--lg" id="ctaWhatsapp">
+            Quero um Diagnóstico Estratégico
+            <svg viewBox="0 0 24 24" class="btn-icon"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+          </a>
+        </div>
         <button class="link-btn" id="restartBtn">Refazer diagnóstico</button>
       </div>
 
@@ -1030,6 +1189,73 @@ p{ margin:0; }
     },
   };
 
+  /* leitura inicial do resultado, com base na nota final (0-100) */
+  const RESULT_INSIGHT = {
+    baixo: "Sua empresa já possui algumas iniciativas de marketing, mas ainda existem falhas de integração entre estratégia, comercial, dados e tecnologia. Neste estágio, aumentar investimentos sem corrigir a estrutura pode ampliar desperdícios e dificultar o crescimento.",
+    mediano: "Sua empresa possui fundamentos importantes, mas alguns pilares ainda dependem de iniciativas pontuais. O próximo passo é fortalecer a integração entre as áreas para criar maior consistência e previsibilidade.",
+    alto: "Sua empresa apresenta uma estrutura de marketing consistente. O próximo desafio está em otimizar processos, integrar melhor os dados e buscar novas oportunidades de eficiência e crescimento.",
+  };
+
+  function getResultInsight(total) {
+    if (total <= 40) return RESULT_INSIGHT.baixo;
+    if (total <= 80) return RESULT_INSIGHT.mediano;
+    return RESULT_INSIGHT.alto;
+  }
+
+  /* classificação de cada pilar, com base na pontuação (0-20) */
+  function getClassification(score) {
+    if (score <= 7) return { tier: "high", label: "Prioridade alta" };
+    if (score <= 14) return { tier: "mid", label: "Em desenvolvimento" };
+    return { tier: "good", label: "Base consistente" };
+  }
+
+  /* pontos para observar em cada pilar — usados na seção de
+     pontos de atenção / oportunidades de evolução */
+  const PILLAR_WATCHPOINTS = {
+    estrategia: [
+      "Clareza dos objetivos de marketing",
+      "Alinhamento entre metas de marketing e metas do negócio",
+      "Existência de um planejamento formal",
+      "Frequência de revisão da estratégia",
+    ],
+    posicionamento: [
+      "Clareza da proposta de valor",
+      "Consistência da comunicação em todos os canais",
+      "Percepção do mercado sobre o diferencial da empresa",
+      "Alinhamento entre discurso e entrega",
+    ],
+    comercial: [
+      "Critérios de qualificação",
+      "Processo de atendimento",
+      "Acompanhamento das oportunidades",
+      "Troca de informações entre marketing e vendas",
+      "Previsibilidade comercial",
+    ],
+    aquisicao: [
+      "Diversidade dos canais de aquisição",
+      "Consistência na geração de demanda",
+      "Previsibilidade do volume de novos contatos",
+      "Dependência de indicações pontuais",
+    ],
+    dados: [
+      "Indicadores acompanhados no dia a dia",
+      "Consistência na coleta de informações",
+      "Uso dos dados nas decisões de marketing",
+      "Integração entre as fontes de dados",
+    ],
+    ia: [
+      "Aplicações de IA nos processos atuais",
+      "Uso de IA para apoiar decisões",
+      "Automação de tarefas repetitivas",
+      "Conhecimento da equipe sobre ferramentas de IA",
+    ],
+  };
+
+  const ATTENTION_SUPPORT = {
+    oportunidades: "Sua empresa demonstra alta maturidade. Os pontos abaixo não representam falhas, mas oportunidades para aprimorar processos, eficiência e vantagem competitiva.",
+    muitosBaixos: "Antes de ampliar os investimentos em marketing, sua empresa pode se beneficiar da organização dos pilares que sustentam a estratégia, a operação e a tomada de decisão.",
+  };
+
   /* estágio geral da empresa, com base na nota final (0-100) */
   const STAGES = [
     { min: 81, max: 100, name: "Alta maturidade", desc: "A empresa apresenta uma boa estrutura de marketing. O próximo passo é otimizar processos, dados e crescimento sustentável." },
@@ -1070,6 +1296,10 @@ p{ margin:0; }
   const scoreRingFill = document.getElementById("scoreRingFill");
   const stageNameEl   = document.getElementById("stageName");
   const stageDescEl   = document.getElementById("stageDesc");
+  const insightTextEl      = document.getElementById("insightText");
+  const attentionTitleEl   = document.getElementById("attentionTitle");
+  const attentionSupportEl = document.getElementById("attentionSupport");
+  const attentionCardsEl   = document.getElementById("attentionCards");
   const radarSvg       = document.getElementById("radarSvg");
   const pillarResultsEl = document.getElementById("pillarResults");
   const ctaWhatsapp    = document.getElementById("ctaWhatsapp");
@@ -1266,6 +1496,61 @@ p{ margin:0; }
   }
 
   /* ---------------------------------------------------------
+     PONTOS DE ATENÇÃO / OPORTUNIDADES DE EVOLUÇÃO
+     Identifica automaticamente os pilares mais baixos (máx. 3).
+     Se todos os pilares estiverem em "Base consistente" (15-20),
+     a seção vira "Próximas oportunidades de evolução" e destaca
+     os 2 pilares com menor nota, mesmo assim consistentes.
+  --------------------------------------------------------- */
+  function renderAttentionSection(pillarScores) {
+    const ranked = PILLARS
+      .map((p) => ({ ...p, score: pillarScores[p.key] }))
+      .sort((a, b) => a.score - b.score);
+
+    const allSolid = ranked.every((p) => p.score >= 15);
+    const lowCount = ranked.filter((p) => p.score <= 7).length;
+
+    let mode, items, supportText;
+    if (allSolid) {
+      mode = "oportunidades";
+      items = ranked.slice(0, 2);
+      supportText = ATTENTION_SUPPORT.oportunidades;
+    } else {
+      mode = "atencao";
+      items = ranked.slice(0, 3);
+      supportText = lowCount >= 3 ? ATTENTION_SUPPORT.muitosBaixos : "";
+    }
+
+    attentionTitleEl.textContent =
+      mode === "oportunidades" ? "Próximas oportunidades de evolução" : "Principais pontos de atenção";
+    attentionSupportEl.textContent = supportText;
+    attentionSupportEl.style.display = supportText ? "block" : "none";
+
+    attentionCardsEl.innerHTML = "";
+    items.forEach((p) => {
+      const commentary = getCommentary(p.key, p.score);
+      const classification = getClassification(p.score);
+      const watchpoints = PILLAR_WATCHPOINTS[p.key] || [];
+
+      const card = document.createElement("div");
+      card.className = `attention-card attention-card--${classification.tier}`;
+      card.innerHTML = `
+        <div class="attention-card__head">
+          <span class="attention-card__name">${p.label}</span>
+          <span class="attention-card__score">${p.score}/20</span>
+          <span class="tier-badge tier-badge--${classification.tier}">${classification.label}</span>
+        </div>
+        <p class="attention-card__text">${commentary}</p>
+        <p class="attention-card__watch-label">Pontos para observar</p>
+        <ul class="attention-card__watch-list">
+          ${watchpoints.map((w) => `<li>${w}</li>`).join("")}
+        </ul>
+      `;
+      attentionCardsEl.appendChild(card);
+    });
+  }
+
+  /* ---------------------------------------------------------
      FINALIZA O QUIZ → mostra resultado
   --------------------------------------------------------- */
   function finishQuiz() {
@@ -1295,6 +1580,9 @@ p{ margin:0; }
     stageNameEl.textContent = stage.name;
     stageDescEl.textContent = stage.desc;
 
+    // leitura inicial do resultado
+    insightTextEl.textContent = getResultInsight(total);
+
     // guarda o resultado calculado para uso posterior
     // (ex.: preparação do payload no formulário de e-mail)
     state.lastResult = {
@@ -1302,6 +1590,9 @@ p{ margin:0; }
       total,
       stageName: stage.name,
     };
+
+    // pontos de atenção / oportunidades de evolução
+    renderAttentionSection(pillarScores);
 
     // radar
     drawRadar(pillarScores);
@@ -1311,17 +1602,21 @@ p{ margin:0; }
     PILLARS.forEach((p) => {
       const score = pillarScores[p.key];
       const commentary = getCommentary(p.key, score);
+      const classification = getClassification(score);
       const pct = (score / 20) * 100;
 
       const card = document.createElement("div");
       card.className = "pillar-result";
       card.innerHTML = `
         <div class="pillar-result__head">
-          <span class="pillar-result__name">${p.label}</span>
+          <div class="pillar-result__head-left">
+            <span class="pillar-result__name">${p.label}</span>
+            <span class="tier-badge tier-badge--${classification.tier}">${classification.label}</span>
+          </div>
           <span class="pillar-result__score">${score}/20</span>
         </div>
         <div class="pillar-result__bar">
-          <div class="pillar-result__bar-fill" style="width:0%"></div>
+          <div class="pillar-result__bar-fill pillar-result__bar-fill--${classification.tier}" style="width:0%"></div>
         </div>
         <p class="pillar-result__text">${commentary}</p>
       `;
