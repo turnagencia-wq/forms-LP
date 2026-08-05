@@ -1123,6 +1123,49 @@ p{ margin:0; }
   const WHATSAPP_NUMBER = "554430390842";
 
   /* ---------------------------------------------------------
+     TRACKING — envio de eventos para o Google Apps Script
+     Falhas de rede nunca bloqueiam a experiência do usuário;
+     ficam registradas apenas via console.error.
+  --------------------------------------------------------- */
+  const TRACKING_ENDPOINT = "https://script.google.com/macros/s/AKfycbzshA7wn987DLHhft9F0l2yXU7reCJiEONZqDCs3McFcQUSdOGZOs4dfbAQxjNbOBUaGg/exec";
+
+  const ANONYMOUS_ID_STORAGE_KEY = "turnDiagnosticoAnonymousId";
+
+  function getOrCreateAnonymousId() {
+    try {
+      let id = localStorage.getItem(ANONYMOUS_ID_STORAGE_KEY);
+      if (!id) {
+        id = "TURN-" + Math.random().toString(16).slice(2, 8).toUpperCase();
+        localStorage.setItem(ANONYMOUS_ID_STORAGE_KEY, id);
+      }
+      return id;
+    } catch (err) {
+      // storage indisponível (ex.: modo privado) — segue com um ID em memória
+      return "TURN-" + Math.random().toString(16).slice(2, 8).toUpperCase();
+    }
+  }
+
+  function getUtmParam(name) {
+    try {
+      return new URLSearchParams(window.location.search).get(name) || "";
+    } catch (err) {
+      return "";
+    }
+  }
+
+  const anonymousId = getOrCreateAnonymousId();
+  const utmSource = getUtmParam("utm_source");
+  const utmCampaign = getUtmParam("utm_campaign");
+
+  function sendTrackingEvent(payload) {
+    return fetch(TRACKING_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /* ---------------------------------------------------------
      DADOS — pilares e perguntas
   --------------------------------------------------------- */
   const PILLARS = [
@@ -1148,6 +1191,26 @@ p{ margin:0; }
     { pillar: "ia",             text: "A inteligência artificial já faz parte dos processos da sua empresa?" },
     { pillar: "ia",             text: "A inteligência artificial já contribui para a tomada de decisão da sua empresa?" },
   ];
+
+  /* chaves usadas no payload de tracking (Google Apps Script) —
+     mesma ordem de QUESTIONS: 2 perguntas por pilar */
+  const TRACKING_ANSWER_KEYS = [
+    "strategy1", "strategy2",
+    "positioning1", "positioning2",
+    "commercial1", "commercial2",
+    "acquisition1", "acquisition2",
+    "data1", "data2",
+    "ai1", "ai2",
+  ];
+  const TRACKING_ANSWER_LABELS = { 10: "Sim", 5: "Parcialmente", 0: "Não" };
+  const TRACKING_PILLAR_KEY_MAP = {
+    estrategia: "strategy",
+    posicionamento: "positioning",
+    comercial: "commercial",
+    aquisicao: "acquisition",
+    dados: "data",
+    ia: "ai",
+  };
 
   /* textos de comentário por pilar, em 4 faixas de pontuação (0-20) */
   const PILLAR_COMMENTARY = {
@@ -1272,6 +1335,7 @@ p{ margin:0; }
     current: 0,
     answers: new Array(QUESTIONS.length).fill(null), // valores 0 | 5 | 10
     lastResult: null, // { pillarScores, total, stageName } do diagnóstico mais recente
+    diagnosticCompletedSent: false, // evita reenvio duplicado do evento diagnostic_completed
   };
 
   /* ---------------------------------------------------------
@@ -1307,6 +1371,7 @@ p{ margin:0; }
   const emailForm      = document.getElementById("emailForm");
   const emailInput     = document.getElementById("emailInput");
   const emailFeedback  = document.getElementById("emailFeedback");
+  const emailSubmitBtn = document.getElementById("emailSubmitBtn");
 
   document.getElementById("year").textContent = new Date().getFullYear();
 
@@ -1324,6 +1389,7 @@ p{ margin:0; }
   startBtn.addEventListener("click", () => {
     state.current = 0;
     state.answers.fill(null);
+    state.diagnosticCompletedSent = false;
     renderQuestion();
     showView("quiz");
   });
@@ -1331,6 +1397,7 @@ p{ margin:0; }
   restartBtn.addEventListener("click", () => {
     state.current = 0;
     state.answers.fill(null);
+    state.diagnosticCompletedSent = false;
     renderQuestion();
     showView("hero");
   });
@@ -1339,6 +1406,25 @@ p{ margin:0; }
     if (state.current === 0) return;
     state.current -= 1;
     renderQuestion();
+  });
+
+  /* ---------------------------------------------------------
+     CTA WHATSAPP — envia o evento de tracking antes de abrir
+     o link. A abertura do WhatsApp não espera a resposta da
+     rede, então uma falha no envio nunca trava o clique.
+  --------------------------------------------------------- */
+  ctaWhatsapp.addEventListener("click", (e) => {
+    e.preventDefault();
+    const href = ctaWhatsapp.href;
+
+    sendTrackingEvent({
+      eventType: "strategic_diagnosis_clicked",
+      anonymousId,
+    }).catch((err) => {
+      console.error("[Diagnóstico Turn] falha ao enviar evento strategic_diagnosis_clicked:", err);
+    });
+
+    window.open(href, "_blank", "noopener");
   });
 
   /* ---------------------------------------------------------
@@ -1360,9 +1446,28 @@ p{ margin:0; }
       return;
     }
 
-    emailFeedback.classList.remove("is-error");
-    emailFeedback.classList.add("is-success");
-    emailFeedback.textContent = "Recebido! Em breve você receberá seu diagnóstico completo por e-mail.";
+    emailFeedback.classList.remove("is-error", "is-success");
+    emailFeedback.textContent = "Enviando...";
+    emailSubmitBtn.disabled = true;
+
+    sendTrackingEvent({
+      eventType: "report_requested",
+      anonymousId,
+      email,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Resposta não-OK do endpoint de tracking: " + res.status);
+        emailFeedback.classList.add("is-success");
+        emailFeedback.textContent = "Recebido! Em breve você receberá seu diagnóstico completo por e-mail.";
+      })
+      .catch((err) => {
+        console.error("[Diagnóstico Turn] falha ao enviar evento report_requested:", err);
+        emailFeedback.classList.add("is-error");
+        emailFeedback.textContent = "Não foi possível enviar agora. Tente novamente em instantes.";
+      })
+      .finally(() => {
+        emailSubmitBtn.disabled = false;
+      });
 
     enviarDiagnosticoCompleto(email);
   });
@@ -1502,7 +1607,7 @@ p{ margin:0; }
      a seção vira "Próximas oportunidades de evolução" e destaca
      os 2 pilares com menor nota, mesmo assim consistentes.
   --------------------------------------------------------- */
-  function renderAttentionSection(pillarScores) {
+  function getAttentionSelection(pillarScores) {
     const ranked = PILLARS
       .map((p) => ({ ...p, score: pillarScores[p.key] }))
       .sort((a, b) => a.score - b.score);
@@ -1510,16 +1615,22 @@ p{ margin:0; }
     const allSolid = ranked.every((p) => p.score >= 15);
     const lowCount = ranked.filter((p) => p.score <= 7).length;
 
-    let mode, items, supportText;
     if (allSolid) {
-      mode = "oportunidades";
-      items = ranked.slice(0, 2);
-      supportText = ATTENTION_SUPPORT.oportunidades;
-    } else {
-      mode = "atencao";
-      items = ranked.slice(0, 3);
-      supportText = lowCount >= 3 ? ATTENTION_SUPPORT.muitosBaixos : "";
+      return {
+        mode: "oportunidades",
+        items: ranked.slice(0, 2),
+        supportText: ATTENTION_SUPPORT.oportunidades,
+      };
     }
+    return {
+      mode: "atencao",
+      items: ranked.slice(0, 3),
+      supportText: lowCount >= 3 ? ATTENTION_SUPPORT.muitosBaixos : "",
+    };
+  }
+
+  function renderAttentionSection(selection) {
+    const { mode, items, supportText } = selection;
 
     attentionTitleEl.textContent =
       mode === "oportunidades" ? "Próximas oportunidades de evolução" : "Principais pontos de atenção";
@@ -1592,7 +1703,8 @@ p{ margin:0; }
     };
 
     // pontos de atenção / oportunidades de evolução
-    renderAttentionSection(pillarScores);
+    const attentionSelection = getAttentionSelection(pillarScores);
+    renderAttentionSection(attentionSelection);
 
     // radar
     drawRadar(pillarScores);
@@ -1633,6 +1745,38 @@ p{ margin:0; }
 
     // integração futura (CRM / Typeform / banco de dados)
     sendToIntegration({ answers: state.answers, pillarScores, total, stage: stage.name });
+
+    // evento de tracking — só uma vez por diagnóstico concluído
+    if (!state.diagnosticCompletedSent) {
+      state.diagnosticCompletedSent = true;
+
+      const answersPayload = {};
+      TRACKING_ANSWER_KEYS.forEach((key, i) => {
+        answersPayload[key] = TRACKING_ANSWER_LABELS[state.answers[i]] ?? "";
+      });
+
+      const scoresPayload = {};
+      PILLARS.forEach((p) => {
+        scoresPayload[TRACKING_PILLAR_KEY_MAP[p.key]] = pillarScores[p.key];
+      });
+
+      sendTrackingEvent({
+        eventType: "diagnostic_completed",
+        anonymousId,
+        city: "",
+        state: "",
+        source: utmSource,
+        campaign: utmCampaign,
+        answers: answersPayload,
+        scores: scoresPayload,
+        finalScore: total,
+        stage: stage.name,
+        primaryAttentionPoint: attentionSelection.items[0] ? attentionSelection.items[0].label : "",
+        otherAttentionPoints: attentionSelection.items.slice(1).map((p) => p.label),
+      }).catch((err) => {
+        console.error("[Diagnóstico Turn] falha ao enviar evento diagnostic_completed:", err);
+      });
+    }
   }
 
   function animateNumber(el, from, to, duration) {
